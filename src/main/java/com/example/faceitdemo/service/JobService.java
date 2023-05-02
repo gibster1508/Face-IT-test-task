@@ -28,8 +28,11 @@ public class JobService {
     private static final String API_URL = "https://www.arbeitnow.com/api/job-board-api?page=";
     private static final int PAGE_COUNT = 5;
     private final JobRepository jobRepository;
-    public JobService(JobRepository jobRepository) {
+    private final RestTemplate restTemplate;
+
+    public JobService(JobRepository jobRepository, RestTemplate restTemplate) {
         this.jobRepository = jobRepository;
+        this.restTemplate = restTemplate;
     }
 
     public Page<Job> getAllJobs(Pageable pageable){
@@ -37,10 +40,10 @@ public class JobService {
     }
 
     public void fetchAndSaveJobs() throws IOException {
-        RestTemplate restTemplate = new RestTemplate();
+
         for (int i = 1; i <= PAGE_COUNT; i++) {
             String apiUrl = API_URL + i;
-            List<Job> jobs = GetMethodForApi(apiUrl, restTemplate);
+            List<Job> jobs = getMethodForApi(apiUrl, restTemplate);
             jobRepository.saveAll(jobs);
         }
     }
@@ -52,7 +55,7 @@ public class JobService {
 
         RestTemplate restTemplate = new RestTemplate();
 
-        List<Job> jobs = GetMethodForApi(apiUrl, restTemplate);
+        List<Job> jobs = getMethodForApi(apiUrl, restTemplate);
 
         int pageSize = pageable.getPageSize();
         int pageNumber = pageable.getPageNumber();
@@ -70,7 +73,7 @@ public class JobService {
             .collect(Collectors.toList());
     }
 
-    private List<Job> GetMethodForApi(String apiUrl, RestTemplate restTemplate) throws JsonProcessingException {
+    List<Job> getMethodForApi(String apiUrl, RestTemplate restTemplate) throws JsonProcessingException {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> request = new HttpEntity<>(headers);
